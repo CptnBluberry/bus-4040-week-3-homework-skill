@@ -1,0 +1,18 @@
+#separator:tab
+#html:true
+#notetype:Basic
+#deck:Specifically Calc II
+When using integration by parts, what's the strategy for picking \(u\)?	L.I.A.T.E<br><br><strong>L</strong> – Logarithmic (\(\ln x, \log x\))<br><strong>I</strong> – Inverse trig (\(\arctan x\), etc.)<br><strong>A</strong> – Algebraic (polynomials like \(x, x^2\))<br><strong>T</strong> – Trigonometric (\(\sin x, \cos x\))<br><strong>E</strong> – Exponential (\(e^x\))<br><br>Pick \(u\) as whichever appears <b>first</b> in that list; the rest becomes \(dv\).
+What is the integration by parts formula?	\[\int u \, dv = uv - \int v \, du\]
+For what values of \(p\) does \(\int_1^\infty \frac{1}{x^p}dx\) converge?	Converges for \(p > 1\), diverges for \(p \leq 1\).<br><br>(The reverse is true for \(\int_0^1\) — that one converges for \(p < 1\).)
+What is \(\int \sin(ax)\,dx\)?	\(\int\sin(ax)dx = -\frac{\cos(ax)}{a} + C\)<br><br>(same pattern for cos, divide by \(a\))
+What is \(\int \frac{1}{x-a}dx\)?	\(\ln|x-a| + C\)
+What is \(\lim_{x \to 0}\frac{\sin(ax)}{ax}\)?	1
+What are the three partial fraction decomposition rules for the numerator?	Linear factor \((x-a)\): numerator is a <b>constant</b><br>Irreducible quadratic \((x^2+bx+c)\): numerator is <b>linear</b>, \((Ax+B)\)<br>Repeated factor \((x-a)^n\): include <b>every power</b> up to the highest
+After partial fraction decomposition, how do you solve for \(A\), \(B\), etc.?	Set the decomposed form equal to the original factored fraction, then multiply through by the common denominator.<br><br>Example: \(5x+3 = A(x+2) + B(x-1)\)<br><br>Then either expand and match coefficients, or substitute the roots to knock out one unknown at a time.
+What does the Integral Test say?	If \(f\) is continuous, positive, and decreasing on \([1,\infty)\), then \(\sum_{n=1}^{\infty} f(n)\) and \(\int_1^\infty f(x)dx\) <b>both converge or both diverge</b>.<br><br>Or in plain English: the sum and the area under the curve live or die together.<br><br>(It tells you <i>whether</i> the series converges, never <i>what</i> it converges to.)
+When does a geometric series \(\sum_{n=0}^{\infty} ar^n\) converge, and to what?	Converges when \(|r| < 1\), to \(\frac{a}{1-r}\).<br><br>Diverges when \(|r| \geq 1\).
+What is the \(n\)-th term test for divergence?	If \(\lim_{n \to \infty} a_n \neq 0\), the series diverges.<br><br>Or in plain English: if the terms don't shrink to nothing, the sum can't settle down.<br><br><b>Careful:</b> the converse fails. \(a_n \to 0\) does <i>not</i> prove convergence — the harmonic series \(\sum \frac{1}{n}\) is the standard counterexample.
+What is the trig substitution for \(\sqrt{a^2-x^2}\)?	Let \(x = a\sin\theta\), so \(dx = a\cos\theta \, d\theta\).<br><br>Then \(\sqrt{a^2-x^2} = a\cos\theta\).
+What is the trig substitution for \(\sqrt{a^2+x^2}\)?	Let \(x = a\tan\theta\), so \(dx = a\sec^2\theta \, d\theta\).<br><br>Then \(\sqrt{a^2+x^2} = a\sec\theta\).
+What is the trig substitution for \(\sqrt{x^2-a^2}\)?	Let \(x = a\sec\theta\), so \(dx = a\sec\theta\tan\theta \, d\theta\).<br><br>Then \(\sqrt{x^2-a^2} = a\tan\theta\).
