@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice Quiz</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #1a1c1f;
+    --muted: #5c636e;
+    --line: #dfe3e8;
+    --accent: #2f5fd0;
+    --accent-soft: #e8eefc;
+    --ok: #1a7f4b;
+    --ok-soft: #e4f5ec;
+    --no: #b3261e;
+    --no-soft: #fce9e7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171a;
+      --card: #1e2125;
+      --ink: #e9ecef;
+      --muted: #a2abb5;
+      --line: #32373d;
+      --accent: #7fa4f5;
+      --accent-soft: #232c3d;
+      --ok: #5fd39a;
+      --ok-soft: #1c2f26;
+      --no: #f08b81;
+      --no-soft: #33211f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 64px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header { margin-bottom: 20px; }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 0.9rem; }
+  .bar { height: 6px; background: var(--line); border-radius: 99px; margin-top: 14px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+    margin-top: 18px;
+  }
+  .chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 99px;
+    padding: 3px 10px;
+    margin-bottom: 12px;
+  }
+  .prompt { font-size: 1.1rem; font-weight: 600; margin: 0 0 18px; }
+  .opts { display: grid; gap: 9px; }
+  .opt {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+  .opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .opt:disabled { cursor: default; }
+  .opt .key {
+    flex: none;
+    width: 22px; height: 22px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+    display: grid; place-items: center;
+  }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .key { border-color: var(--ok); color: var(--ok); }
+  .opt.wrong { border-color: var(--no); background: var(--no-soft); }
+  .opt.wrong .key { border-color: var(--no); color: var(--no); }
+  .fb { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .fb .verdict { font-weight: 700; margin-bottom: 6px; }
+  .fb.good .verdict { color: var(--ok); }
+  .fb.bad .verdict { color: var(--no); }
+  .fb .why { color: var(--ink); }
+  .fb .src { margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  button.go {
+    font: inherit;
+    font-weight: 600;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 9px;
+    padding: 10px 18px;
+    cursor: pointer;
+  }
+  button.go.ghost { background: transparent; color: var(--accent); }
+  button.go:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .score { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; }
+  .score small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: .04em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 0.83rem; margin-top: 22px; }
+</style>
+</head>
+<body>
+
+<!--
+  Question data. Replace the JSON below; leave everything else in this file alone.
+  Schema is documented in references/output-spec.md.
+-->
+<script type="application/json" id="quiz-data">
+{
+  "title": "BUS 4040 — Weeks 1-3 Practice Quiz",
+  "questions": [
+    {
+      "id": "w1-peer-review-weight",
+      "source": "Week 1",
+      "type": "mc",
+      "prompt": "How much of the course grade comes from peer review of teammate participation?",
+      "options": ["5%", "10%", "15%", "20%"],
+      "answer": 2,
+      "explanation": "Peer review is 15% — tied with SPEC and Final Product as the heaviest single components. GitHub Setup is the lightest at 5%."
+    },
+    {
+      "id": "w1-not-programming",
+      "source": "Week 1",
+      "type": "mc",
+      "prompt": "According to the course overview, what will you NOT do in this class?",
+      "options": [
+        "Learn to program; AI does the building",
+        "Work in teams toward a final product",
+        "Use tools such as GitHub and VS Code",
+        "Take a written final exam at the end"
+      ],
+      "answer": 0,
+      "explanation": "The course says plainly that you will not learn to program. You are shown tools and you decide what gets built; AI does the building."
+    },
+    {
+      "id": "w1-course-arc",
+      "source": "Week 1",
+      "type": "mc",
+      "prompt": "In the course arc, which step comes immediately after requirements?",
+      "options": ["Customer interview", "SPEC", "Data layer", "Packaging"],
+      "answer": 1,
+      "explanation": "The arc runs tools, process overview, customer interview, requirements, SPEC, data layer, AI builds working app, packaging. The customer interview comes before requirements, not after."
+    },
+    {
+      "id": "w1-final-no-tricks",
+      "source": "Week 1",
+      "type": "tf",
+      "prompt": "True or false: nothing on the final exam is a trick, and every question on it gets discussed in class.",
+      "options": ["True", "False"],
+      "answer": 0,
+      "explanation": "True. The course states this twice — the instructor is not there to trick you, and everything on the final is discussed in class."
+    },
+    {
+      "id": "w2-git-origin",
+      "source": "Week 2",
+      "type": "mc",
+      "prompt": "Git was created in 2005 for what purpose?",
+      "options": [
+        "To give GitHub a product it could sell to software teams",
+        "To replace the centralized system used at one large company",
+        "For Linux kernel development, after it lost access to its proprietary tool",
+        "To let one user at a time track changes to files on one machine"
+      ],
+      "answer": 2,
+      "explanation": "Linus Torvalds wrote Git for Linux kernel development after the project lost access to its proprietary tool, then released it free, fast, and decentralized."
+    },
+    {
+      "id": "w2-add-readme",
+      "source": "Week 2",
+      "type": "mc",
+      "prompt": "When creating a new GitHub repo, why does the course say to set Add README to On?",
+      "options": [
+        "It creates an initial commit that maps the repo to the main branch",
+        "It makes the new repository public instead of private by default",
+        "It is required before the repository can be cloned to your computer",
+        "It sets your own account as the owner of the new repository"
+      ],
+      "answer": 0,
+      "explanation": "Creating the README creates an initial commit, and that commit is what maps the repo to the main branch."
+    },
+    {
+      "id": "w2-after-add",
+      "source": "Week 2",
+      "type": "mc",
+      "prompt": "You have just staged your file with git add. What is the next step in the workflow?",
+      "options": [
+        "Push the branch with git push -u origin <branch>",
+        "Commit the staged files with git commit -m \"...\"",
+        "Create the pull request with gh pr create",
+        "Create the branch with git checkout -b <branch>"
+      ],
+      "answer": 1,
+      "explanation": "The order is branch, add, commit, push, then create the PR. The commit is what records your staged files to the local branch, so pushing first would send nothing."
+    },
+    {
+      "id": "w2-centralized-copy",
+      "source": "Week 2",
+      "type": "tf",
+      "prompt": "True or false: in a centralized version control system, every developer holds a full copy of the entire history.",
+      "options": ["True", "False"],
+      "answer": 1,
+      "explanation": "False. That describes Git. Centralized systems versioned whole projects but required everyone to depend on one central server to commit, branch, or view history."
+    },
+    {
+      "id": "w2-multiverse-main",
+      "source": "Week 2",
+      "type": "mc",
+      "prompt": "In the movie-multiverse comparison the course uses, what does main stand for?",
+      "options": [
+        "The copy of the repo on your local computer",
+        "A new timeline created by checking out a branch",
+        "The original reality that branches copy from",
+        "The files staged to be added to the branch"
+      ],
+      "answer": 2,
+      "explanation": "main is the original reality. clone copies the repo to your computer, and checking out a branch creates a new timeline from main."
+    },
+    {
+      "id": "w3-harness-def",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "What is a harness?",
+      "options": [
+        "The numbers inside a model that get tuned during training",
+        "The program you use to interact with an AI model",
+        "The chunk of text a model reads instead of a whole word",
+        "The limit on how much text a model can consider at once"
+      ],
+      "answer": 1,
+      "explanation": "The harness is the program you interact with — the Claude app, Claude Code, Codex, Forge Code, Ollama. The course puts it this way: the harness is the music player, the model is the music."
+    },
+    {
+      "id": "w3-token-size",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "Roughly how much text is one token, on average?",
+      "options": [
+        "About three quarters of an English word",
+        "Exactly one English word, no more",
+        "About three full English words",
+        "A single letter or character"
+      ],
+      "answer": 0,
+      "explanation": "A token averages about 3/4 of an English word. Short common words are one token; longer or unusual words get split into several."
+    },
+    {
+      "id": "w3-parameters",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "What are parameters in an AI model?",
+      "options": [
+        "The chunks of text the model reads and writes",
+        "The number of messages a model can remember",
+        "The numbers inside the model tuned during training",
+        "The per-message price the vendor charges you"
+      ],
+      "answer": 2,
+      "explanation": "Parameters are the numbers tuned inside the model during training, quoted in billions — a 7B model versus a 70B model. Tokens are the chunks of text going in and out, and you pay per token, not per parameter."
+    },
+    {
+      "id": "w3-claude-tiers",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "What is the order of Claude's four model tiers, largest to smallest?",
+      "options": [
+        "Opus, Fable, Sonnet, Haiku",
+        "Fable, Sonnet, Opus, Haiku",
+        "Haiku, Sonnet, Opus, Fable",
+        "Fable, Opus, Sonnet, Haiku"
+      ],
+      "answer": 3,
+      "explanation": "Fable, Opus, Sonnet, Haiku. Fable is the top end for the hardest problems, Opus is roughly twice the cost of Sonnet, Sonnet is the everyday workhorse, and Haiku is fast and cheap for simple high volume work."
+    },
+    {
+      "id": "w3-closed-models",
+      "source": "Week 3",
+      "type": "tf",
+      "prompt": "True or false: closed models such as Claude, GPT, and Gemini can be downloaded and run on your own hardware.",
+      "options": ["True", "False"],
+      "answer": 1,
+      "explanation": "False. Closed models run on the vendor's servers and you rent access. Open weight models — Llama, Qwen, Gemma — are the ones you can download and run yourself."
+    },
+    {
+      "id": "w3-chat-cost",
+      "source": "Week 3",
+      "type": "tf",
+      "prompt": "True or false: every turn resends the whole conversation, so a long chat costs more per message than a short one.",
+      "options": ["True", "False"],
+      "answer": 0,
+      "explanation": "True. You pay per token, input and output, and each turn resends the whole conversation. Long sessions also make the AI more likely to drift off track."
+    },
+    {
+      "id": "w3-compact",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "Which Claude slash command shrinks the data in the context, which can reduce cost and drift?",
+      "options": ["/clear", "/memory", "/agents", "/compact"],
+      "answer": 3,
+      "explanation": "/compact shrinks the context. /clear starts a fresh conversation, /memory edits what Claude remembers, and /agents manages agents."
+    },
+    {
+      "id": "w3-claude-md",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "What is the difference between a global and a project CLAUDE.md file?",
+      "options": [
+        "Global applies to all your work; project applies to one folder",
+        "Global is read every session; project is read only on request",
+        "Global holds your chat history; project holds your commands",
+        "Global is written by the vendor; project is written by you"
+      ],
+      "answer": 0,
+      "explanation": "CLAUDE.md is a standing instruction file Claude reads every session. The global one covers all your work and the project one covers a single folder."
+    },
+    {
+      "id": "w3-soofi",
+      "source": "Week 3",
+      "type": "mc",
+      "prompt": "What makes Germany's SOOFI-S notable?",
+      "options": [
+        "It is the large commercial model built into Search and Workspace",
+        "It is open source and publishes its full training data list for audit",
+        "It is the model that made open weight AI mainstream worldwide",
+        "It is strong at coding and at languages other than English"
+      ],
+      "answer": 1,
+      "explanation": "SOOFI-S publishes its full training data list, about 27 trillion tokens, so the data can be audited. The other three options describe Gemini, Llama, and Qwen."
+    },
+    {
+      "id": "hw-one-file",
+      "source": "Week 3 Homework",
+      "type": "mc",
+      "prompt": "For the Part 2 homework, what is the quiz simulator supposed to be?",
+      "options": [
+        "A site hosted online so classmates can visit and take it",
+        "A set of markdown files that AI reads back to you as questions",
+        "One self-contained index.html file that runs when you double click it",
+        "A program you start from the command line after a build step"
+      ],
+      "answer": 2,
+      "explanation": "The assignment asks for a single index.html file holding the HTML, CSS, JavaScript, and all the questions — no server, no build step, no internet, no external libraries."
+    },
+    {
+      "id": "hw-public-repo",
+      "source": "Week 3 Homework",
+      "type": "tf",
+      "prompt": "True or false: both repositories created for the week 3 homework should be set to Public, with Add README set to On.",
+      "options": ["True", "False"],
+      "answer": 0,
+      "explanation": "True. Both bus-4040-week-3-homework-skill and bus-4040-week-3-homework-quiz-sim are created Public with Add README on, then cloned locally."
+    }
+  ]
+}
+</script>
+
+<div class="wrap">
+  <header>
+    <h1 id="title">Practice Quiz</h1>
+    <div class="sub" id="progress">&nbsp;</div>
+    <div class="bar"><i id="barFill"></i></div>
+  </header>
+
+  <main id="quizScreen">
+    <div class="card">
+      <span class="chip" id="qSource">&nbsp;</span>
+      <p class="prompt" id="qPrompt"></p>
+      <div class="opts" id="qOpts"></div>
+      <div class="fb" id="feedback" hidden role="status" aria-live="polite">
+        <div class="verdict" id="fbVerdict"></div>
+        <div class="why" id="fbWhy"></div>
+        <div class="src" id="fbSrc"></div>
+      </div>
+      <div class="row" id="nextRow" hidden>
+        <button class="go" id="btnNext">Next question</button>
+      </div>
+    </div>
+    <p class="hint">Press <strong>1</strong>&ndash;<strong>5</strong> to answer, <strong>Enter</strong> to continue.</p>
+  </main>
+
+  <main id="resultScreen" hidden>
+    <div class="card">
+      <div class="score"><span id="rScore">0</span><small id="rPct"></small></div>
+      <div class="sub" id="rBlurb"></div>
+      <table id="rTable">
+        <thead><tr><th>Source</th><th class="num">Asked</th><th class="num">Missed</th></tr></thead>
+        <tbody id="rBody"></tbody>
+      </table>
+      <div class="row">
+        <button class="go" id="btnRetry" hidden>Retry missed</button>
+        <button class="go ghost" id="btnRestart">Start over</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA = JSON.parse(document.getElementById("quiz-data").textContent);
+  var ALL = DATA.questions || [];
+
+  var el = function (id) { return document.getElementById(id); };
+  var quizScreen = el("quizScreen"), resultScreen = el("resultScreen");
+  var feedback = el("feedback"), nextRow = el("nextRow"), btnNext = el("btnNext");
+  var btnRetry = el("btnRetry"), btnRestart = el("btnRestart");
+
+  var pool = [], idx = 0, correct = 0, missed = [], answered = false, buttons = [];
+
+  document.title = DATA.title || "Practice Quiz";
+  el("title").textContent = DATA.title || "Practice Quiz";
+
+  function shuffle(list) {
+    var a = list.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // Shuffle multiple-choice options while tracking where the correct one lands.
+  // True/false keeps its natural True-then-False order.
+  function prepare(q) {
+    if (q.type === "tf") {
+      return { q: q, options: q.options.slice(), answer: q.answer };
+    }
+    var paired = q.options.map(function (text, i) {
+      return { text: text, correct: i === q.answer };
+    });
+    var mixed = shuffle(paired);
+    var answer = 0;
+    for (var i = 0; i < mixed.length; i++) { if (mixed[i].correct) { answer = i; } }
+    return {
+      q: q,
+      options: mixed.map(function (o) { return o.text; }),
+      answer: answer
+    };
+  }
+
+  function start(questions) {
+    pool = shuffle(questions).map(prepare);
+    idx = 0; correct = 0; missed = [];
+    resultScreen.hidden = true;
+    quizScreen.hidden = false;
+    render();
+  }
+
+  function render() {
+    if (idx >= pool.length) { return finish(); }
+    var item = pool[idx];
+
+    el("progress").textContent = "Question " + (idx + 1) + " of " + pool.length;
+    el("barFill").style.width = ((idx / pool.length) * 100) + "%";
+    el("qSource").textContent = item.q.source;
+    el("qPrompt").textContent = item.q.prompt;
+
+    var box = el("qOpts");
+    box.textContent = "";
+    buttons = item.options.map(function (text, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      var k = document.createElement("span");
+      k.className = "key";
+      k.textContent = String(i + 1);
+      var s = document.createElement("span");
+      s.textContent = text;
+      b.appendChild(k);
+      b.appendChild(s);
+      b.addEventListener("click", function () { choose(i); });
+      box.appendChild(b);
+      return b;
+    });
+
+    answered = false;
+    feedback.hidden = true;
+    nextRow.hidden = true;
+    btnNext.textContent = (idx === pool.length - 1) ? "See results" : "Next question";
+  }
+
+  function choose(picked) {
+    if (answered) { return; }
+    answered = true;
+
+    var item = pool[idx];
+    var right = picked === item.answer;
+    if (right) { correct++; } else { missed.push(item.q); }
+
+    buttons.forEach(function (b, i) {
+      b.disabled = true;
+      if (i === item.answer) { b.classList.add("correct"); }
+      else if (i === picked) { b.classList.add("wrong"); }
+    });
+
+    feedback.className = "fb " + (right ? "good" : "bad");
+    el("fbVerdict").textContent = right ? "Correct" : "Not quite";
+    el("fbWhy").textContent = item.q.explanation;
+    el("fbSrc").textContent = "Review: " + item.q.source;
+    feedback.hidden = false;
+    nextRow.hidden = false;
+    btnNext.focus();
+  }
+
+  function finish() {
+    quizScreen.hidden = true;
+    resultScreen.hidden = false;
+    el("barFill").style.width = "100%";
+    el("progress").textContent = "Finished";
+
+    var total = pool.length;
+    var pct = total ? Math.round((correct / total) * 100) : 0;
+    el("rScore").textContent = correct + " / " + total;
+    el("rPct").textContent = "  (" + pct + "%)";
+    el("rBlurb").textContent = missed.length
+      ? "Missed " + missed.length + ". The table shows where to review."
+      : "Everything correct.";
+
+    var asked = {}, wrong = {};
+    pool.forEach(function (it) {
+      asked[it.q.source] = (asked[it.q.source] || 0) + 1;
+    });
+    missed.forEach(function (q) {
+      wrong[q.source] = (wrong[q.source] || 0) + 1;
+    });
+
+    var body = el("rBody");
+    body.textContent = "";
+    Object.keys(asked).sort().forEach(function (src) {
+      var tr = document.createElement("tr");
+      [src, String(asked[src]), String(wrong[src] || 0)].forEach(function (v, i) {
+        var td = document.createElement("td");
+        if (i > 0) { td.className = "num"; }
+        td.textContent = v;
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+
+    btnRetry.hidden = missed.length === 0;
+    btnRetry.textContent = "Retry missed (" + missed.length + ")";
+  }
+
+  btnNext.addEventListener("click", function () { idx++; render(); });
+  btnRetry.addEventListener("click", function () { start(missed); });
+  btnRestart.addEventListener("click", function () { start(ALL); });
+
+  document.addEventListener("keydown", function (e) {
+    if (!resultScreen.hidden) { return; }
+    if (!answered) {
+      var n = parseInt(e.key, 10);
+      if (n >= 1 && n <= buttons.length) { e.preventDefault(); buttons[n - 1].click(); }
+    } else if (e.key === "Enter" && document.activeElement !== btnNext) {
+      e.preventDefault();
+      btnNext.click();
+    }
+  });
+
+  start(ALL);
+})();
+</script>
+
+</body>
+</html>
